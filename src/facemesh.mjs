@@ -7,9 +7,12 @@ import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detec
 const TFFaceMesh = function() {
   //Backend options are webgl, wasm, and CPU.
   //For recent laptops WASM is better than WebGL.
-  this.model = faceLandmarksDetection.load(
-    faceLandmarksDetection.SupportedPackages.mediapipeFacemesh,
-    { maxFaces: 1 }
+  this.model = faceLandmarksDetection.createDetector(
+    faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
+    { 
+      runtime: 'mediapipe',
+      solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh',
+     }
   );
   this.predictionReady = false;
 };
@@ -36,12 +39,9 @@ TFFaceMesh.prototype.getEyePatches = async function(video, imageCanvas, width, h
 
   // Pass in a video stream (or an image, canvas, or 3D tensor) to obtain an
   // array of detected faces from the MediaPipe graph.
-  const predictions = await model.estimateFaces({
-    input: video,
-    returnTensors: false,
-    flipHorizontal: false,
-    predictIrises: false,
-  });
+  const predictions = await model.estimateFaces(
+    imageCanvas,
+  );
 
   if (predictions.length == 0){
     return false;
@@ -56,16 +56,22 @@ TFFaceMesh.prototype.getEyePatches = async function(video, imageCanvas, width, h
   // Keypoints indexes are documented at
   // https://github.com/tensorflow/tfjs-models/blob/118d4727197d4a21e2d4691e134a7bc30d90deee/face-landmarks-detection/mesh_map.jpg
   // https://stackoverflow.com/questions/66649492/how-to-get-specific-landmark-of-face-like-lips-or-eyes-using-tensorflow-js-face
+
+  const predictedPoint = (item) => {
+    var tmp = prediction.keypoints[item];
+    return [tmp.x, tmp.y, tmp.z];
+  };
+
   const [leftBBox, rightBBox] = [
     // left
     {
-      eyeTopArc: prediction.annotations.leftEyeUpper0,
-      eyeBottomArc: prediction.annotations.leftEyeLower0
+      eyeTopArc: [466, 388, 387, 386, 385, 384, 398].map(predictedPoint),
+      eyeBottomArc: [263, 249, 390, 373, 374, 380, 381, 382, 362].map(predictedPoint),
     },
     // right
     {
-      eyeTopArc: prediction.annotations.rightEyeUpper0,
-      eyeBottomArc: prediction.annotations.rightEyeLower0
+      eyeTopArc: [246, 161, 160, 159, 158, 157, 173].map(predictedPoint),
+      eyeBottomArc: [33, 7, 163, 144, 145, 153, 154, 155, 133].map(predictedPoint),
     },
   ].map(({ eyeTopArc, eyeBottomArc }) => {
     const topLeftOrigin = {
