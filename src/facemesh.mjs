@@ -111,6 +111,8 @@ TFFaceMesh.prototype.getEyePatches = async function(video, imageCanvas, width, h
   // Start building object to be returned
   var eyeObjs = {};
 
+  eyeObjs.face = prediction.keypoints
+
   var leftImageData = imageCanvas.getContext('2d').getImageData(leftOriginX, leftOriginY, leftWidth, leftHeight);
   eyeObjs.left = {
     patch: leftImageData,
