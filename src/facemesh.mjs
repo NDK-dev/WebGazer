@@ -9,7 +9,8 @@ const TFFaceMesh = function() {
   //For recent laptops WASM is better than WebGL.
   this.model = faceLandmarksDetection.createDetector(
     faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
-    { 
+    {
+      refineLandmarks: true,
       runtime: 'mediapipe',
       solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh',
      }
